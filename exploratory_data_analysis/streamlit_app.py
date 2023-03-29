@@ -8,6 +8,7 @@ import matplotlib.ticker as ticker
 header = st.container()
 col_select = st.container()
 chart = st.container()
+box = st.container()
 
 @st.cache_data
 def load_data():
@@ -83,3 +84,23 @@ with chart:
     figure = plt.figure(figsize=(10,8))
     sns.heatmap(df11_temp[col_names].corr())
     st.pyplot(figure)
+
+with box:
+    st.subheader('Box plot of selected columns')
+    fig, axis = plt.subplots(4, 1, figsize=(10, 20))
+    df11_temp[data_col_name2+'_bins'] = pd.cut(df11_temp[data_col_name2], 10)
+    df21_temp[data_col_name2+'_bins'] = pd.cut(df21_temp[data_col_name2], 10)
+    df36_temp[data_col_name2+'_bins'] = pd.cut(df36_temp[data_col_name2], 10)
+    df90_temp[data_col_name2+'_bins'] = pd.cut(df90_temp[data_col_name2], 10)
+    
+    axis[0].set_title('R80711', fontsize=20)
+    axis[1].set_title('R80721', fontsize=20)
+    axis[2].set_title('R80736', fontsize=20)
+    axis[3].set_title('R80790', fontsize=20)
+
+    sns.boxplot(data=df11_temp, x=data_col_name2+'_bins', y=data_col_name1, ax=axis[0])
+    sns.boxplot(data=df21_temp, x=data_col_name2+'_bins', y=data_col_name1, ax=axis[1])
+    sns.boxplot(data=df36_temp, x=data_col_name2+'_bins', y=data_col_name1, ax=axis[2])
+    sns.boxplot(data=df90_temp, x=data_col_name2+'_bins', y=data_col_name1, ax=axis[3])
+    st.pyplot(fig)
+    
