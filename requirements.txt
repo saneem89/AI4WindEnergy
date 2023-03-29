@@ -2,3 +2,6 @@ numpy
 pandas
 streamlit
 matplotlib
+pytorch-lightning==1.5.0
+torch==1.8.0
+darts
