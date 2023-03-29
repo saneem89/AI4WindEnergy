@@ -15,7 +15,16 @@ value_columns = ['Ba_avg', 'P_avg', 'Q_avg', 'Ya_avg', 'Yt_avg', 'Ws1_avg', 'Ws2
         'pressure', 'humidity', 'wind_speed', 'wind_deg', 'rain_1h','snow_1h']
 
 def get_missing_datetime(df, time_step = 10):
-    # From the dataframe find the missing data rows by looking at the date_time column
+    """
+    Finds the missing data rows in a dataframe by looking at the date_time column.
+
+    Args:
+        df (pandas.DataFrame): The dataframe to search for missing data rows.
+        time_step (int): Number of minutes between two timestamps in the dataframe.
+
+    Returns:
+        list: A list of missing dates in datetime format.
+    """
     date_time = df['Date_time'].to_list()    
     missing_dates = []
     missing_ids = []
@@ -30,6 +39,17 @@ def get_missing_datetime(df, time_step = 10):
     return missing_dates
 
 def add_dummy_rows_for_missing_data(filename):
+    """
+    Reads a csv file of timeseries data and adds dummy rows for the missing data.
+    dummy rows will have correct "Date_time" column but all other columns will be NaN.
+
+    Args:
+        filename (str): Turbine name using which filename will be generated
+
+    Returns:
+        pandas.DataFrame: A dataframe with dummy rows added for missing data.
+        list: A list of missing dates.
+    """
     df = pd.read_csv('../data/' + filename+ '.csv')[columns]
     df['Date_time'] = pd.to_datetime(df['Date_time'], utc=True).dt.tz_localize(None) # removing tzoffset
 
