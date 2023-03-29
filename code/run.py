@@ -131,11 +131,10 @@ def init_model(model_type, model_name,epochs=2, batch_size=32):
             batch_size=batch_size,
             pl_trainer_kwargs={
                 "accelerator": "gpu",
-                "devices": [0]
+                "devices": [1]
                 },
             log_tensorboard=True,
-            model_name = model_name,
-            save_checkpoint = True
+            model_name = model_name
         )
     else:
         model= model_class(
@@ -145,8 +144,7 @@ def init_model(model_type, model_name,epochs=2, batch_size=32):
             random_state=42, 
             batch_size=batch_size,
             log_tensorboard=True,
-            model_name = model_name,
-            save_checkpoint = True
+            model_name = model_name
         )
     return model    
 
@@ -235,7 +233,7 @@ def evaluate(args,
     """
     # loading and processing the data
     train_val_split = pd.Timestamp('2017-01-01')
-    values, weather, time, value_scaler, weather_scaler, time_scaler = prepare_data(args.turbine_name)
+    values, weather, time, value_scaler, _, _ = prepare_data(args.turbine_name)
     _, values_val = values.split_after(train_val_split)
     _, weather_val = weather.split_after(train_val_split)
     _, time_val = time.split_after(train_val_split)
@@ -268,13 +266,17 @@ def evaluate(args,
         retrain=False,
     )
     
+    # Transforming prediction and actual values back to original scale
+    series = value_scaler.inverse_transform(series)
+    backtest_pred = value_scaler.inverse_transform(backtest_pred)
+    
     # computing eval metrics per column in the series
     header = ['Column Name', 'MAE', 'MAPE', 'SMAPE']
     eval_list = []
     for col in series.columns:
         evals = ['-'] * 4
         evals[0] = col
-        evals[1] = "{:.2f}%".format(mae(series[col], backtest_pred[col]))
+        evals[1] = "{:.2f}".format(mae(series[col], backtest_pred[col]))
         if all(series[col] > 0):
             # replacing negative values with 0
             backtest_pred_non_neg = backtest_pred[col].map(lambda x: x.clip(0,None)) 
