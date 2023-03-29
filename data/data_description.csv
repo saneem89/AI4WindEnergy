@@ -1,0 +1,42 @@
+Variable_name,Variable_long_name,Unit_long_name,Comment
+P_avg,Active_power,kW,
+Q_avg,Reactive_power,kVAr,
+Rm_avg,Torque,Nm,
+Rs_avg,Rotor_speed,rpm,
+Ya_avg,Absolute_Nacelle_direction,deg,
+Yt_avg,Nacelle_temperature,deg_C,
+Va_avg,Vane_position,deg,
+Rbt_avg,Rotor_bearing_temperature,deg_C,
+Ba_avg,Pitch_angle,deg,
+Ws1_avg,Wind_speed_1,m/s,First anemometer on the nacelle
+Ws2_avg,Wind_speed_2,m/s,Second anemometer on the nacelle
+Ws_avg,Wind_speed,m/s,Average wind speed
+Wa_avg,Absolute_wind_direction,deg,
+Ot_avg,Outdoor_temperature,deg_C,
+Wind_speed,Wind speed from openweathermap, m/s,
+wind_deg,Wind direction from openweathermap, deg,
+pressure,Pressure from openweathermap, hPa,
+rain_1h,Rainfall in the last hour from openweathermap, mm,
+snow_1h,Snowfall in the last hour from openweathermap, mm,
+humidity,Humidity from openweathermap, %,
+temp,Outdoor temperature from openweathermap, deg_C,
+Va2,Vane_position_2,deg,Second wind vane on the nacelle
+Git,Gearbox_inlet_temperature,deg_C,
+Nf,Grid_frequency,Hz,
+Nu,Grid_voltage,V,
+Dst,Generator_stator_temperature,deg_C,
+Wa_c,Absolute_wind_direction_corrected,deg,
+DCs,Generator_converter_speed,rpm,
+Na_c,Nacelle_angle_corrected,deg,
+Gost,Gearbox_oil_sump_temperature,deg_C,
+Gb2t,Gearbox_bearing_2_temperature,deg_C,
+Ds,Generator_speed,rpm,
+Db2t,Generator_bearing_2_temperature,deg_C,
+Cm,Converter_torque,Nm,
+Rt,Hub_temperature,deg_C,
+S,Apparent_power,kVA,Should be the square root of the sum of P square and Q square
+Cosphi,Power_factor,,Should equal P/S
+Gb1t,Gearbox_bearing_1_temperature,deg_C,
+Db1t,Generator_bearing_1_temperature,deg_C,
+Va1,Vane_position_1,deg,First wind vane on the nacelle
+Pas,Pitch_angle_setpoint,,

@@ -1,3 +1,5 @@
 data/*
 code/darts_logs/*
 models/*
+!data/data_description.csv
+!data/static-information.csv
