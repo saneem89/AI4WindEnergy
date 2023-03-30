@@ -9,7 +9,8 @@ from darts.models import (
     NBEATSModel,
     BlockRNNModel,
     DLinearModel,
-    NLinearModel
+    NLinearModel,
+    TFTModel
 )
 import argparse
 
@@ -19,9 +20,10 @@ import warnings
 logging.disable(logging.CRITICAL)
 warnings.filterwarnings("ignore")
 
-value_cols = ['Ba_avg', 'P_avg', 'Q_avg', 'Ya_avg', 'Yt_avg', 'Ws1_avg', 'Ws2_avg',
-        'Ws_avg', 'Wa_avg', 'Va_avg', 'Ot_avg', 'Rs_avg', 'Rbt_avg', 'Rm_avg']
-weather_cols = ['temp', 'pressure', 'humidity', 'wind_speed', 'wind_deg', 'rain_1h','snow_1h']
+value_cols = ['P_avg', 'Q_avg', 'Rm_avg', 'Rs_avg','Ya_avg', 'Yt_avg', 'Va_avg', 
+              'Rbt_avg', 'Ba_avg']
+weather_cols = ['Ws1_avg', 'Ws2_avg', 'Ws_avg', 'Wa_avg',  'Ot_avg', 'wind_speed', 
+                'wind_deg', 'temp', 'pressure','humidity', 'rain_1h', 'snow_1h']
 time_cols = ['year', 'timeofday', 'dayofyear', 'weekofyear', 'hour']
 
 def read_and_add_time_features(fname):
@@ -102,6 +104,8 @@ def get_model_class(model_type):
         model_class = DLinearModel
     elif model_type.lower() == 'nlinear':
         model_class = NLinearModel
+    elif model_type.lower() == 'tft':
+        model_class = TFTModel
     else:
         raise ValueError('Invalid model name')
     return model_class
@@ -113,7 +117,7 @@ def init_model(model_type, model_name,epochs=2, batch_size=32):
     we want to be able to predict 36 hours in advance as this is what Deepmind claimed they were able to do.
 
     Args:
-        model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear)
+        model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear, tft)
         model_name (str): This is used to save the logs and checkpoints of the model
         epochs (int): The number of epochs to train the model for. Defaults to 2.
         batch_size (int): The batch size to use when training the model. Defaults to 32.
@@ -131,7 +135,7 @@ def init_model(model_type, model_name,epochs=2, batch_size=32):
             batch_size=batch_size,
             pl_trainer_kwargs={
                 "accelerator": "gpu",
-                "devices": [1]
+                "devices": [0]
                 },
             log_tensorboard=True,
             model_name = model_name
@@ -156,12 +160,13 @@ def train(args):
     Args:
         args (object): An object containing the following attributes:
             - turbine_name (str): The name of the turbine. This is used to read the data. (eg: R80711)
-            - model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear)
+            - model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear, tft)
             - expt_name (str): The name of the experiment. This is used to save the logs and checkpoints of the model.
             - epochs (int): The number of epochs to train the model for.
             - batch_size (int): The batch size to use when training the model.
             - mode (str): Mode here means if to use covariates or not. 
                 Options: no_covariates, weather_covariates, time_covariates and all_covariates (use both time and weather)
+            - covariates (str): If to use past covariates or future covariates or both. options: past, future, both.
 
     Returns:
         None, but saves the model in the models folder.
@@ -175,32 +180,42 @@ def train(args):
     
     model = init_model(args.model_type, args.expt_name, args.epochs, args.batch_size)
     if args.mode == 'no_covariates':
-        model.fit(values_train, 
-                  val_series=values_val,
-                  verbose=True)
+        cov_train = None
+        cov_val = None
     elif args.mode == 'weather_covariates':
-        model.fit(values_train,
-                  val_series = values_val,
-                  past_covariates=weather_train, 
-                  val_past_covariates=weather_val,
-                  verbose=True)
+        cov_train = weather_train
+        cov_val = weather_val
     elif args.mode == 'time_covariates':
-        model.fit(values_train, 
-                  val_series = values_val,
-                  past_covariates=time_train,
-                  val_past_covariates=time_val,
-                  verbose=True)
+        cov_train = time_train
+        cov_val = time_val
     elif args.mode == 'all_covariates':
-        covariates_train = weather_train.stack(time_train)
-        covariates_val = weather_val.stack(time_val)        
-        model.fit(values_train, 
-                  val_series = values_val,
-                  past_covariates=covariates_train,
-                  val_past_covariates=covariates_val,
-                  verbose=True)
+        cov_train = weather_train.stack(time_train)
+        cov_val = weather_val.stack(time_val)
     else:
         raise ValueError('Invalid mode')
-    model.save(f'../models/{args.expt_name}_{args.mode}_{args.model_type}_{args.epochs}.pt')
+    
+    if args.covariates == 'past':
+        model.fit(values_train, 
+                    val_series = values_val,
+                    past_covariates=cov_train,
+                    val_past_covariates=cov_val,
+                    verbose=True)
+    elif args.covariates == 'future':
+        model.fit(values_train, 
+                    val_series = values_val,
+                    future_covariates=cov_train,
+                    val_future_covariates=cov_val,
+                    verbose=True)
+    elif args.covariates == 'both':
+        model.fit(values_train, 
+                    val_series = values_val,
+                    past_covariates=cov_train,
+                    val_past_covariates=cov_val,
+                    future_covariates=cov_train,
+                    val_future_covariates=cov_val,
+                    verbose=True)
+
+    model.save(f'../models/{args.expt_name}_{args.model_type}_{args.mode}_{args.covariates}_{args.epochs}.pt')
 
 # def predict(model_path, model_type, num_predictions=12, past_covariates=None, series=None):
 #     model_class = get_model_class(model_type)
@@ -220,7 +235,7 @@ def evaluate(args,
     Args:
         args (object): An object containing the following attributes:
             - turbine_name (str): The name of the turbine. This is used to read the data. (eg: R80711)
-            - model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear)
+            - model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear, tft)
             - model_path (str): The path to the saved model.
             - forecast_horizon (int): How far away in the future to predict.
             - start_from (int): The first prediction time in the data. Defaults to 400
@@ -253,13 +268,27 @@ def evaluate(args,
             raise ValueError('Invalid past covariates')
     else:
         past_covariates = None
-        
+
+    if model.future_covariate_series is not None:
+        if model.future_covariate_series.columns.to_list() == weather_val.columns.to_list():
+            future_covariates = weather_val
+        elif model.future_covariate_series.columns.to_list() == cov_val.columns.to_list():
+            future_covariates = cov_val
+        elif model.future_covariate_series.columns.to_list() == time_val.columns.to_list():
+            future_covariates = time_val
+        else:
+            raise ValueError('Invalid past covariates')
+    else:
+        future_covariates = None
+
+    
     # only taking first few instances for faster evaluation   
     series = values_val[:max_predictions + start_from + 1] 
     
     backtest_pred = model.historical_forecasts(
         series=series,
         past_covariates=past_covariates,
+        future_covariates=future_covariates,
         start=start_from,
         forecast_horizon=forecast_horizon,
         stride=1,
@@ -295,9 +324,11 @@ if __name__ == '__main__':
     parser.add_argument('--turbine_name', type=str, default='R80711', 
                     help ='Name of turbine to train/evaluate the model on')    
     parser.add_argument('--model_type', type=str, default='nlinear', 
-                    help ='available model types: tcn, transformer, nbeats, blockrnn, dlinear, nlinear')
+                    help ='available model types: tcn, transformer, nbeats, blockrnn, dlinear, nlinear, tft')
     parser.add_argument('--mode', type=str, default='no_covariates', 
                     help ='Modes of time series forecasting: no_covariates, weather_covariates, time_covariates, all_covariates')
+    parser.add_argument('--covariates', type=str, default='past', 
+                    help ='If to use past covariates or future covariates or both. options: past, future, both')
 
     parser.add_argument('--do_train', action='store_true', 
                     help='do training')
