@@ -5,7 +5,7 @@ Using time series AI methods on IoT data captured from wind turbines.
 ## Getting started
 
 ### Installing dependencies
-We recommend to first setup conda environment with Python 3.7+ and then install dependencies from using pip:
+We recommend to first setup conda environment with Python 3.7+ and then install dependencies using pip:
  ```shell
  pip install -r requirements.txt
 ```
