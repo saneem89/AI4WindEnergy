@@ -10,7 +10,12 @@ We recommend to first setup conda environment with Python 3.7+ and then install 
  pip install -r requirements.txt
 ```
 ### Getting data
-Download the data from the wind energy company Engie's [open data page](https://opendata-renewables.engie.com/explore/index) and put those csv files in `data/` folder. Descriptions about the columns in this data is provided in [data_description.tsv](https://github.com/saneem89/AI4WindEnergy/blob/main/data/data_description.csv) file.
+Download the data from the wind energy company Engie's [open data page](https://opendata-renewables.engie.com/explore/index) and put those csv files in `data/` folder. Descriptions about the columns in this data is provided in [data_description.tsv](https://github.com/saneem89/AI4WindEnergy/blob/main/data/data_description.csv) file. Once data is available we need to fill in missing values which will create `data/imputed/` folder with same filenames but with all datetime instances filled.
+
+```bash
+cd code
+python impute_missing_data.py
+```
 
 ## Data exploration
 A streamlit app for visualizing wind turbine data is available in this repo. Line charts of two columns for four turbines are shown at once. User could also select the date range from which the charts need to be shown. A correlation matrix between the columns in the time series data is also shown in the app. At the end box plot of first column with second column as x-axis is also given. `streamlit` command can be used to start the app.
