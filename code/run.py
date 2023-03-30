@@ -225,8 +225,7 @@ def train(args):
 #                          series = series)
 #     return pred
     
-def evaluate(args,
-             forecast_horizon=12, 
+def evaluate(args, 
              start_from=400,
              max_predictions=5000):
     """
@@ -238,9 +237,9 @@ def evaluate(args,
             - model_type (str): The type of model to use (options: tcn, transformer, nbeats, blockrnn, dlinear, nlinear, tft)
             - model_path (str): The path to the saved model.
             - forecast_horizon (int): How far away in the future to predict.
-            - start_from (int): The first prediction time in the data. Defaults to 400
-            - max_predictions (int): The maximum number of predictions to make when evaluating the model. 
-                Don't set this too high as it will take a long time to evaluate the model. Defaults to 5000.
+        - start_from (int): The first prediction time in the data. Defaults to 400
+        - max_predictions (int): The maximum number of predictions to make when evaluating the model. 
+            Don't set this too high as it will take a long time to evaluate the model. Defaults to 5000.
 
     Returns:
         None
@@ -290,7 +289,7 @@ def evaluate(args,
         past_covariates=past_covariates,
         future_covariates=future_covariates,
         start=start_from,
-        forecast_horizon=forecast_horizon,
+        forecast_horizon=args.forecast_horizon,
         stride=1,
         retrain=False,
     )
@@ -343,6 +342,9 @@ if __name__ == '__main__':
     parser.add_argument('--model_path', type=str, 
                     default='../models/both_cov_blockrnn_e10_all_covariates_blockrnn_10.pt', 
                     help ='Path to model to evaluate')
+    parser.add_argument('--forecast_horizon', type=int, 
+                    default=12, 
+                    help ='How long into the future does the model need to forecast')
     parser.add_argument('--results_path', type=str, 
                     default='../results/eval_simple_model.csv', 
                     help ='Evaluation results will be saved here')
